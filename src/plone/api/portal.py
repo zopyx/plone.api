@@ -9,11 +9,13 @@ from plone.api.exc import InvalidParameterError
 from plone.api.exc import MissingParameterError
 from plone.app.layout.navigation.root import getNavigationRootObject
 from plone.registry.interfaces import IRegistry
+
 from Products.CMFPlone.utils import getToolByName
 from Products.statusmessages.interfaces import IStatusMessage
+from Products.CMFCore.interfaces import ISiteRoot
+
 from zope.component import getMultiAdapter
 from zope.component import getUtility
-from zope.component.hooks import getSite
 from zope.globalrequest import getRequest
 
 
@@ -27,8 +29,8 @@ def get():
     :Example: :ref:`portal_get_example`
 
     """
-    portal = getSite()
-    if portal:
+    portal = getUtility(ISiteRoot)
+    if portal is not None:
         return portal
     raise CannotGetPortalError(
         "Unable to get the portal object. More info on "
@@ -108,7 +110,8 @@ def send_email(sender=None, recipient=None, subject=None, body=None):
         raise ValueError
 
     portal = get()
-    ctrlOverview = getMultiAdapter((portal, portal.REQUEST),
+    request = getRequest()
+    ctrlOverview = getMultiAdapter((portal, request),
                                    name='overview-controlpanel')
     if ctrlOverview.mailhost_warning():
         raise ValueError('MailHost is not configured.')

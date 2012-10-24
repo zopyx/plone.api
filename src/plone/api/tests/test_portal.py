@@ -6,11 +6,13 @@ from email import message_from_string
 from plone.api import portal
 from plone.api.exc import InvalidParameterError
 from plone.api.exc import MissingParameterError
+from plone.api.exc import CannotGetPortalError
 from plone.api.tests.base import INTEGRATION_TESTING
 from plone.app.layout.navigation.interfaces import INavigationRoot
 from plone.registry import field
 from plone.registry.interfaces import IRegistry
 from plone.registry.record import Record
+
 from Products.CMFCore.utils import getToolByName
 from Products.CMFPlone.tests.utils import MockMailHost
 from Products.MailHost.interfaces import IMailHost
@@ -48,11 +50,10 @@ class TestPloneApiPortal(unittest.TestCase):
         """Test getting the portal object."""
         self.assertEqual(portal.get(), self.portal)
 
-    @mock.patch('plone.api.portal.getSite')
-    def test_get_no_site(self, getSite):
+    @mock.patch('plone.api.portal.getUtility')
+    def test_get_no_site(self, getUtility):
         """Test error msg when getSite() returns None."""
-        getSite.return_value = None
-        from plone.api.exc import CannotGetPortalError
+        getUtility.return_value = None
         self.assertRaises(CannotGetPortalError, portal.get)
 
     def test_get_tool_constraints(self):
