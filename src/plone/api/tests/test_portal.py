@@ -50,10 +50,10 @@ class TestPloneApiPortal(unittest.TestCase):
         """Test getting the portal object."""
         self.assertEqual(portal.get(), self.portal)
 
-    @mock.patch('plone.api.portal.getUtility')
-    def test_get_no_site(self, getUtility):
+    @mock.patch('plone.api.portal.getSite')
+    def test_get_no_site(self, getSite):
         """Test error msg when getSite() returns None."""
-        getUtility.return_value = None
+        getSite.return_value = None
         self.assertRaises(CannotGetPortalError, portal.get)
 
     def test_get_tool_constraints(self):

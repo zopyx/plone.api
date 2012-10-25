@@ -17,7 +17,6 @@ from zope.component import getMultiAdapter
 from zope.component import getSiteManager
 from zope.interface import Interface
 from zope.interface import providedBy
-from zope.globalrequest import getRequest
 
 import random
 import transaction
@@ -89,11 +88,9 @@ def create(container=None,
 
     # Archetypes specific code
     if IBaseObject.providedBy(content):
-        # We need a request here
-        request = getRequest()
         # Will finish Archetypes content item creation process,
         # rename-after-creation and such
-        content.processForm(REQUEST=request)
+        content.processForm()
 
     if not id or (safe_id and id):
         # Create a new id from title
