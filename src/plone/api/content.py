@@ -23,8 +23,8 @@ import random
 import transaction
 
 
-@required_parameter_type(parameter_name="id", parameter_type=str)
-@required_parameter_type(parameter_name="title", parameter_type=unicode)
+#@required_parameter_type(parameter_name="id", parameter_type=str)
+#@required_parameter_type(parameter_name="title", parameter_type=unicode)
 @required_parameters('container', 'type')
 def create(
     container=None,

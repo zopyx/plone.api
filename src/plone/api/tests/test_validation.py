@@ -181,5 +181,5 @@ class TestPloneAPIValidation(unittest.TestCase):
             pass
         
         from plone.api.exc import InvalidParameterError
-
-        self.assertRaises(InvalidParameterError, _set_title, title="some_str")
+        with self.assertRaises(InvalidParameterError):
+            _set_title(title="some_str")
