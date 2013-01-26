@@ -7,6 +7,7 @@ from plone.api.exc import InvalidParameterError
 from plone.api.exc import MissingParameterError
 from plone.api.validation import mutually_exclusive_parameters
 from plone.api.validation import required_parameters
+from plone.api.validation import required_parameter_type
 from plone.app.uuid.utils import uuidToObject
 from plone.uuid.interfaces import IUUID
 from Products.Archetypes.interfaces.base import IBaseObject
@@ -22,6 +23,8 @@ import random
 import transaction
 
 
+@required_parameter_type(parameter_name="id", parameter_type=str)
+@required_parameter_type(parameter_name="title", parameter_type=unicode)
 @required_parameters('container', 'type')
 def create(
     container=None,
@@ -45,7 +48,7 @@ def create(
     :type id: string
     :param title: Title of the object. If no title is provided, use id as
         the title.
-    :type title: string
+    :type title: unicode string
     :param safe_id: When False, the given id will be enforced. If the id is
         conflicting with another object in the target container, raise a
         InvalidParameterError. When True, choose a new, non-conflicting id.

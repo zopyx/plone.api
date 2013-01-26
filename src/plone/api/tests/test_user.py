@@ -299,7 +299,7 @@ class TestPloneApiUser(unittest.TestCase):
             container=self.portal,
             type='Folder',
             id='folder_one',
-            title='Folder One')
+            title=u'Folder One')
 
         for k, v in PERMISSIONS.items():
             self.assertEqual(v,
@@ -423,12 +423,12 @@ class TestPloneApiUser(unittest.TestCase):
             container=portal,
             type='Folder',
             id='folder_one',
-            title='Folder One')
+            title=u'Folder One')
         document = api.content.create(
             container=folder,
             type='Document',
             id='document_one',
-            title='Document One')
+            title=u'Document One')
 
         api.user.grant_roles(username='chuck', roles=['Editor'], obj=folder)
         self.assertIn(
@@ -495,11 +495,11 @@ class TestPloneApiUser(unittest.TestCase):
         folder = api.content.create(container=portal,
                                     type='Folder',
                                     id='folder_one',
-                                    title='Folder One')
+                                    title=u'Folder One')
         document = api.content.create(container=folder,
                                       type='Document',
                                       id='document_one',
-                                      title='Document One')
+                                      title=u'Document One')
         api.user.grant_roles(username='chuck',
                              roles=['Reviewer', 'Editor'],
                              obj=folder)

@@ -82,6 +82,7 @@ class TestPloneApiContent(unittest.TestCase):
 
         # Check the contraints for the type parameter
         container = mock.Mock()
+        container.__getitem__ = mock.Mock()
         self.assertRaises(
             MissingParameterError,
             api.content.create,
@@ -159,7 +160,7 @@ class TestPloneApiContent(unittest.TestCase):
         page = api.content.create(
             container=folder,
             type='Dexterity Item',
-            title='Test id generated'
+            title=u'Test id generated'
         )
         assert page
         self.assertEqual(page.id, 'test-id-generated')
@@ -196,7 +197,7 @@ class TestPloneApiContent(unittest.TestCase):
 
         # Create a document with a title and without an id
         page = api.content.create(
-            container=folder, type='Document', title='Test id generated')
+            container=folder, type='Document', title=u'Test id generated')
         assert page
         self.assertEqual(page.id, 'test-id-generated')
         self.assertEqual(page.Title(), 'Test id generated')

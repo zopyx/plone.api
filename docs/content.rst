@@ -33,7 +33,7 @@ method. The type attribute will automatically decide which content type
     from plone import api
     obj = api.content.create(
         type='Document',
-        title='My Content',
+        title=u'My Content',
         container=portal)
 
 The ``id`` of the object gets generated (in a safe way) from its ``title``.

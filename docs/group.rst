@@ -257,7 +257,7 @@ in that particular context.
 
     from plone import api
     portal = api.portal.get()
-    folder = api.content.create(container=portal, type='Folder', id='folder_four', title='Folder Four')
+    folder = api.content.create(container=portal, type='Folder', id='folder_four', title=u'Folder Four')
     roles = api.group.get_roles(groupname='staff', obj=portal['folder_four'])
 
 .. invisible-code-block: python
@@ -292,7 +292,7 @@ If you pass in a content object, it will grant these roles in that particular co
 
     from plone import api
     portal = api.portal.get()
-    folder = api.content.create(container=portal, type='Folder', id='folder_five', title='Folder Five')
+    folder = api.content.create(container=portal, type='Folder', id='folder_five', title=u'Folder Five')
     api.group.grant_roles(groupname='staff',
         roles=['Contributor'],
         obj=portal['folder_five'])

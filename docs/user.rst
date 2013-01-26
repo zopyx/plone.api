@@ -252,7 +252,7 @@ in that particular context.
 
     from plone import api
     portal = api.portal.get()
-    blog = api.content.create(container=portal, type='Document', id='blog', title='My blog')
+    blog = api.content.create(container=portal, type='Document', id='blog', title=u'My blog')
     roles = api.user.get_roles(username='jane', obj=portal['blog'])
 
 .. invisible-code-block: python
@@ -295,7 +295,7 @@ in that particular context.
 
     from plone import api
     portal = api.portal.get()
-    folder = api.content.create(container=portal, type='Folder', id='folder_two', title='Folder Two')
+    folder = api.content.create(container=portal, type='Folder', id='folder_two', title=u'Folder Two')
     permissions = api.user.get_permissions(username='mike', obj=portal['folder_two'])
 
 .. invisible-code-block: python
@@ -340,7 +340,7 @@ But all site wide roles will be also returned by :meth:`api.user.get_roles` to t
 .. code-block:: python
 
     from plone import api
-    folder = api.content.create(container=portal, type='Folder', id='folder_one', title='Folder One')
+    folder = api.content.create(container=portal, type='Folder', id='folder_one', title=u'Folder One')
     api.user.grant_roles(username='jane',
         roles=['Editor', 'Contributor'],
         obj=portal['folder_one']
@@ -382,7 +382,7 @@ If you pass a context object the local roles will be removed.
 .. code-block:: python
 
     from plone import api
-    folder = api.content.create(container=portal, type='Folder', id='folder_three', title='Folder Three')
+    folder = api.content.create(container=portal, type='Folder', id='folder_three', title=u'Folder Three')
     api.user.grant_roles(username='jane',
         roles=['Editor', 'Contributor'],
         obj=portal['folder_three']

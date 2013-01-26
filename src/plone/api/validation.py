@@ -97,3 +97,30 @@ def mutually_exclusive_parameters(*exclusive_params):
         return decorator(wrapped, func)
 
     return _mutually_exclusive_parameters
+
+
+def required_parameter_type(parameter_name="", parameter_type=None):
+    """A decorator that raises an exception if a particular parameter
+    is not of the required type
+
+    Usage:
+    @parameter_of_type(parameter='id', parameter_type=str):
+    def create(id=None):
+        pass
+    """
+    def _parameter_of_type(func):
+        """The actual decorator"""
+        def wrapped(*args, **kwargs):
+            """The wrapped function (whose docstring will get replaced)"""
+            param_value = kwargs.get(parameter_name, None)
+            if param_value and not isinstance(param_value, parameter_type):
+                raise InvalidParameterError(
+                    "The '{0}' parameter is of type {1} but should be of "
+                    "type {2}.".format(
+                        parameter_name, type(param_value), parameter_type)
+                )
+            return func(*args, **kwargs)
+
+        return wrapped
+
+    return _parameter_of_type

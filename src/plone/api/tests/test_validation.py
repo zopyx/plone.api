@@ -5,6 +5,7 @@ from plone.api.tests.base import INTEGRATION_TESTING
 from plone.api.validation import _get_supplied_args as _gsa
 from plone.api.validation import mutually_exclusive_parameters
 from plone.api.validation import required_parameters
+from plone.api.validation import required_parameter_type
 
 import unittest2 as unittest
 
@@ -140,6 +141,7 @@ class TestPloneAPIValidation(unittest.TestCase):
         """Test that multiple decorators can be used together"""
         @mutually_exclusive_parameters('arg2', 'arg3')
         @required_parameters('arg1')
+        @required_parameter_type(parameter_name="arg2", parameter_type=str)
         def _func1_decorated(arg1=None, arg2=None, arg3=None):
             pass
 
@@ -168,3 +170,16 @@ class TestPloneAPIValidation(unittest.TestCase):
             arg2='ahoy',
             arg3='there',
         )
+
+    def test_required_string_parameter_type(self):
+        """Test that an exception is raised if the type of a required
+        parameter does not match the type specified by the
+        required_parameter_type decorator.
+        """
+        @required_parameter_type(parameter_name="title", parameter_type=unicode)
+        def _set_title(title=""):
+            pass
+        
+        from plone.api.exc import InvalidParameterError
+
+        self.assertRaises(InvalidParameterError, _set_title, title="some_str")

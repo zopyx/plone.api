@@ -59,7 +59,7 @@ class TestPloneApiPortal(unittest.TestCase):
 
         """
         a_site = content.create(
-            container=self.portal, type="Folder", title="A Site")
+            container=self.portal, type='Folder', title=u'A Site')
         a_site.setSiteManager(LocalSiteManager(a_site))
 
         setSite(a_site)
