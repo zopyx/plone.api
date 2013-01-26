@@ -32,6 +32,9 @@ def _get_supplied_args(signature_params, args, kwargs):
         if args[i] is not None:
             supplied_args.append(signature_params[i])
 
+    if kwargs:
+        print "There are kwargs here!", kwargs
+        
     for k in kwargs:
         if kwargs[k] is not None:
             supplied_args.append(k)
@@ -85,6 +88,7 @@ def mutually_exclusive_parameters(*exclusive_params):
 
         def wrapped(f, *args, **kwargs):
             """The wrapped function (whose docstring will get replaced)"""
+
             supplied_args = _get_supplied_args(signature_params, args, kwargs)
             clashes = [s for s in supplied_args if s in exclusive_params]
             if len(clashes) > 1:
@@ -110,8 +114,9 @@ def required_parameter_type(parameter_name="", parameter_type=None):
     """
     def _parameter_of_type(func):
         """The actual decorator"""
-        def wrapped(*args, **kwargs):
+        def wrapped(f, *args, **kwargs):
             """The wrapped function (whose docstring will get replaced)"""
+            import pdb; pdb.set_trace()
             param_value = kwargs.get(parameter_name, None)
             if param_value and not isinstance(param_value, parameter_type):
                 raise InvalidParameterError(
@@ -119,8 +124,8 @@ def required_parameter_type(parameter_name="", parameter_type=None):
                     "type {2}.".format(
                         parameter_name, type(param_value), parameter_type)
                 )
-            return func(*args, **kwargs)
+            return f(*args, **kwargs)
 
-        return wrapped
+        return decorator(wrapped, func)
 
     return _parameter_of_type
