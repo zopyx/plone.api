@@ -56,7 +56,8 @@ how to use Plone directly.
 Also, we don't intend to cover all possible use-cases. Only the most common
 ones. If you need to do something that `plone.api` does not support,
 just use the underlying APIs directly. We will cover 20% of tasks that are
-being done 80% of the time, and not one more.
+being done 80% of the time, and not one more. We try to document sensible use
+cases even when we don't provide them, though.
 
 
 Design decisions
@@ -65,9 +66,10 @@ Design decisions
 Import and usage style
 ----------------------
 
-API methods are grouped by their field of usage: :ref:`chapter_portal`,
-:ref:`chapter_content`, :ref:`chapter_users` and :ref:`chapter_groups`.
-Hence the importing and usage of API methods look like this:
+API methods are grouped by their field of usage. For example:
+:ref:`chapter_portal`, :ref:`chapter_content`, :ref:`chapter_users`
+and :ref:`chapter_groups`.  Hence the importing and usage of API
+methods look like this:
 
 .. invisible-code-block: python
 
@@ -169,16 +171,17 @@ Medium- to long-term:
 
 Below is a collection of ideas we have for the long run, in no particular order:
 
-- api.env.adopt_role and api.env.adopt_user (to use with ``with``, especially
-  in tests):
+- api.env.adopt_user (to use with ``with``, especially in tests):
 
   .. code-block:: python
 
-      with api.env.adopt_role('Manager'):
-          # do something bypassing all constraints, permissions, etc.
-
-      with api.env.adopt_role('Reviewer'):
-          # do something as a reviewer to see if permission are set correctly
+      with api.env.adopt_user('admin'):
+          api.context.create(
+              type='Document',
+              title='Exhaustive list of kittens',
+              container=portal
+          )
+          # Should leave behind a Document object owned by the user 'admin'.
 
 - api.env TEST_MODE and DEBUG_MODE
 
@@ -214,7 +217,3 @@ Below is a collection of ideas we have for the long run, in no particular order:
   - easier to AJAXify stuff
 
 - Flask-type url_for_view() and view_for_url()
-
-
-
-

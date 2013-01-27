@@ -4,7 +4,7 @@
 from App.config import getConfiguration
 from plone.api import portal
 from plone.api.exc import InvalidParameterError
-from plone.api.exc import MissingParameterError
+from plone.api.validation import at_least_one_of
 from plone.api.validation import mutually_exclusive_parameters
 from plone.api.validation import required_parameters
 from plone.api.validation import required_parameter_type
@@ -26,6 +26,7 @@ import transaction
 @required_parameter_type(parameter_name="title", parameter_type=unicode)
 @required_parameters('container', 'type')
 @required_parameter_type(parameter_name="id", parameter_type=str)
+@at_least_one_of('id', 'title')
 def create(
     container=None,
     type=None,
@@ -59,14 +60,7 @@ def create(
         :class:`~plone.api.exc.MissingParameterError`,
         :class:`~plone.api.exc.InvalidParameterError`
     :Example: :ref:`content_create_example`
-
     """
-    if not id and not title:
-        raise MissingParameterError(
-            'You have to provide either the ``id`` or the '
-            '``title`` parameter'
-        )
-
     # Create a temporary id if the id is not given
     content_id = not safe_id and id or str(random.randint(0, 99999999))
 
@@ -82,9 +76,9 @@ def create(
             types = container.getLocallyAllowedTypes()
 
         raise InvalidParameterError(
-            "Cannot add a '%s' object to the container.\n"
+            "Cannot add a '{0}' object to the container.\n"
             "Allowed types are:\n"
-            "%s" % (type, '\n'.join(sorted(types)))
+            "{1}".format(type, '\n'.join(sorted(types)))
         )
 
     content = container[content_id]
@@ -113,6 +107,7 @@ def create(
 
 
 @mutually_exclusive_parameters('path', 'UID')
+@at_least_one_of('path', 'UID')
 def get(path=None, UID=None):
     """Get an object.
 
@@ -125,12 +120,7 @@ def get(path=None, UID=None):
     :raises:
         ValueError,
     :Example: :ref:`content_get_example`
-
     """
-    if not path and not UID:
-        raise ValueError(
-            'When getting an object path or UID attribute is required')
-
     if path:
         site = portal.get()
         site_absolute_path = site.absolute_url_path()
@@ -147,6 +137,7 @@ def get(path=None, UID=None):
 
 
 @required_parameters('source')
+@at_least_one_of('target', 'id')
 def move(source=None, target=None, id=None, safe_id=False):
     """Move the object to the target container.
 
@@ -170,11 +161,7 @@ def move(source=None, target=None, id=None, safe_id=False):
         KeyError
         ValueError
     :Example: :ref:`content_move_example`
-
     """
-    if not target and not id:
-        raise ValueError
-
     source_id = source.getId()
 
     # If no target is given the object is probably renamed
@@ -209,12 +196,12 @@ def rename(obj=None, new_id=None, safe_id=False):
         InvalidParameterError. When True, choose a new, non-conflicting id.
     :type safe_id: boolean
     :Example: :ref:`content_rename_example`
-
     """
     move(source=obj, id=new_id, safe_id=safe_id)
 
 
 @required_parameters('source')
+@at_least_one_of('target', 'id')
 def copy(source=None, target=None, id=None, safe_id=False):
     """Copy the object to the target container.
 
@@ -238,11 +225,7 @@ def copy(source=None, target=None, id=None, safe_id=False):
         KeyError,
         ValueError
     :Example: :ref:`content_copy_example`
-
     """
-    if not target and not id:
-        raise ValueError
-
     source_id = source.getId()
     target.manage_pasteObjects(source.manage_copyObjects(source_id))
 
@@ -265,7 +248,6 @@ def delete(obj=None):
     :raises:
         ValueError
     :Example: :ref:`content_delete_example`
-
     """
     obj.aq_parent.manage_delObjects([obj.getId()])
 
@@ -281,7 +263,6 @@ def get_state(obj=None):
     :raises:
         ValueError
     :Example: :ref:`content_get_state_example`
-
     """
     workflow = portal.get_tool('portal_workflow')
     return workflow.getInfoFor(obj, 'review_state')
@@ -300,7 +281,6 @@ def transition(obj=None, transition=None):
         :class:`~plone.api.exc.MissingParameterError`,
         :class:`~plone.api.exc.InvalidParameterError`
     :Example: :ref:`content_transition_example`
-
     """
     workflow = portal.get_tool('portal_workflow')
     try:
@@ -311,9 +291,9 @@ def transition(obj=None, transition=None):
         ]
 
         raise InvalidParameterError(
-            "Invalid transition '%s'.\n"
+            "Invalid transition '{0}'.\n"
             "Valid transitions are:\n"
-            "%s" % (transition, '\n'.join(sorted(transitions)))
+            "{1}".format(transition, '\n'.join(sorted(transitions)))
         )
 
 
@@ -331,7 +311,6 @@ def get_view(name=None, context=None, request=None):
         :class:`~plone.api.exc.MissingParameterError`,
         :class:`~plone.api.exc.InvalidParameterError`
     :Example: :ref:`content_get_view_example`
-
     """
     # It happens sometimes that ACTUAL_URL is not set in tests. To be nice
     # and not throw strange errors, we set it to be the same as URL.
@@ -353,9 +332,9 @@ def get_view(name=None, context=None, request=None):
         views_names = [view[0] for view in views]
 
         raise InvalidParameterError(
-            "Cannot find a view with name '%s'.\n"
+            "Cannot find a view with name '{0}'.\n"
             "Available views are:\n"
-            "%s" % (name, '\n'.join(sorted(views_names)))
+            "{1}".format(name, '\n'.join(sorted(views_names)))
         )
 
 
@@ -370,6 +349,5 @@ def get_uuid(obj=None):
     :raises:
         ValueError
     :Example: :ref:`content_get_uuid_example`
-
     """
     return IUUID(obj)

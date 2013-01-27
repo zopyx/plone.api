@@ -16,12 +16,14 @@ from zope.component import getUtility
 from zope.component import providedBy
 from zope.component.hooks import getSite
 from zope.globalrequest import getRequest
+import pkg_resources
 
 logger = getLogger('plone.api.portal')
 
 try:
+    pkg_resources.get_distribution('plone.registry')
     from plone.registry.interfaces import IRegistry
-except ImportError:  # pragma: no cover
+except pkg_resources.DistributionNotFound:
     logger.warning(
         'plone.registry is not installed. get_registry_record and '
         'set_registry_record will be unavailable.'
@@ -37,7 +39,6 @@ def get():
     :returns: Plone portal object
     :rtype: Portal object
     :Example: :ref:`portal_get_example`
-
     """
 
     closest_site = getSite()
@@ -65,7 +66,6 @@ def get_navigation_root(context=None):
     :returns: Navigation Root
     :rtype: Portal object
     :Example: :ref:`portal_get_navigation_root_example`
-
     """
     context = aq_inner(context)
     return getNavigationRootObject(context, get())
@@ -82,7 +82,6 @@ def get_tool(name=None):
         :class:`~plone.api.exc.MissingParameterError`,
         :class:`~plone.api.exc.InvalidParameterError`
     :Example: :ref:`portal_get_tool_example`
-
     """
     try:
         return getToolByName(get(), name)
@@ -96,9 +95,9 @@ def get_tool(name=None):
                 tools.append(id)
 
         raise InvalidParameterError(
-            "Cannot find a tool with name '%s'.\n"
+            "Cannot find a tool with name '{0}'.\n"
             "Available tools are:\n"
-            "%s" % (name, '\n'.join(tools))
+            "{1}".format(name, '\n'.join(tools))
         )
 
 
@@ -118,7 +117,6 @@ def send_email(sender=None, recipient=None, subject=None, body=None):
     :raises:
         ValueError
     :Example: :ref:`portal_send_email_example`
-
     """
     portal = get()
     from plone.api import content
@@ -179,7 +177,6 @@ def get_localized_time(datetime=None, long_format=False, time_only=False):
     :raises:
         ValueError
     :Example: :ref:`portal_get_localized_time_example`
-
     """
     tool = get_tool(name='translation_service')
     request = getRequest()
@@ -205,7 +202,6 @@ def show_message(message=None, request=None, type='info'):
     :raises:
         ValueError
     :Example: :ref:`portal_show_message_example`
-
     """
     IStatusMessage(request).add(message, type=type)
 
@@ -219,7 +215,6 @@ def get_registry_record(name=None):
     :returns: Registry record value
     :rtype: plone.app.registry registry record
     :Example: :ref:`portal_get_registry_record_example`
-
     """
     if not isinstance(name, str):
         raise InvalidParameterError(u"The parameter has to be a string")
@@ -230,9 +225,9 @@ def get_registry_record(name=None):
         records = [_name for _name, record in registry.records.items()]
 
         raise InvalidParameterError(
-            "Cannot find a record with name '%s'.\n"
+            "Cannot find a record with name '{0}'.\n"
             "Available records are:\n"
-            "%s" % (name, '\n'.join(records))
+            "{1}".format(name, '\n'.join(records))
         )
 
     return registry[name]
@@ -247,7 +242,6 @@ def set_registry_record(name=None, value=None):
     :param value: [required] Value to set
     :type value: python primitive
     :Example: :ref:`portal_set_registry_record_example`
-
     """
     if not isinstance(name, str):
         raise InvalidParameterError(u"The parameter 'name' has to be a string")

@@ -73,7 +73,7 @@ following two styles for breaking long lines into blocks:
  * The last argument line needs to have a trailing comma (to be nice to the
    next developer coming in to add something as an argument and minimize VCS
    diffs in these cases).
- * The closing parenthesis or bracket need to have the same indentation level
+ * The closing parenthesis or bracket needs to have the same indentation level
    as the first line.
  * Each line can only contain a single argument.
  * The same style applies to dicts, lists, return calls, etc.
@@ -86,7 +86,28 @@ in action.
 Docstrings style
 ================
 
-Read and follow http://www.python.org/dev/peps/pep-0257/. That's it.
+Read and follow http://www.python.org/dev/peps/pep-0257/. There is one
+exception though: We reject BDFL's recommendation about inserting a blank line
+between the last paragraph in a multi-line docstring and its closing quotes as
+it's Emacs specific and two emacs users here on the Beer & Wine Sprint both
+support our way.
+
+If you wanna be extra nice, you are encouraged to document your method's
+parameters and their return values in a `reST field list syntax
+<http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html#field-lists>`_.
+
+.. sourcecode:: rest
+
+
+    :param foo: blah blah
+    :type foo: string
+    :param bar: blah blah
+    :type bar: int
+    :returns: something
+
+Check out the `plone.api source
+<https://github.com/plone/plone.api/tree/master/src/plone/api>`_ for more
+usage examples.
 
 
 Unit tests style
@@ -97,6 +118,14 @@ is new in unittest2 and use it.
 
 This is not true for in-line documentation tests. Those still use old unittest
 test-cases, so you cannot use ``assertIn`` and similar.
+
+
+String formatting
+=================
+
+As per http://docs.python.org/2/library/stdtypes.html#str.format, we should
+prefer the new style string formatting (``.format()``) over the old one
+(``% ()``).
 
 
 About imports
@@ -298,8 +327,8 @@ Git workflow & branching model
 Our repository on GitHub has the following layout:
 
 * **feature branches**: all development for new features must be done in
-  dedicated branches, normaly one branch per feature,
-* **master branch**: when features get completed they are merged into the maste
+  dedicated branches, normally one branch per feature,
+* **master branch**: when features get completed they are merged into the master
   branch; bugfixes are commited directly on the master branch,
 * **tags**: whenever we create a new release we tag the repository so we can
   later re-trace our steps, re-release versions, etc.
@@ -337,20 +366,20 @@ Git Commit Message Style
 ::
 
     Capitalized, short (50 chars or less) summary
-     
+
     More detailed explanatory text, if necessary.  Wrap it to about 72
     characters or so.  In some contexts, the first line is treated as the
     subject of an email and the rest of the text as the body.  The blank
     line separating the summary from the body is critical (unless you omit
     the body entirely); tools like rebase can get confused if you run the
     two together.
-     
+
     Write your commit message in the imperative: "Fix bug" and not "Fixed bug"
     or "Fixes bug."  This convention matches up with commit messages generated
     by commands like git merge and git revert.
-     
+
     Further paragraphs come after blank lines.
-     
+
     - Bullet points are okay, too
     - Typically a hyphen or asterisk is used for the bullet, preceded by a
     single space, with blank lines in between, but conventions vary here

@@ -80,7 +80,6 @@ def DocFileSuite(
     :type layer: object
 
     :rtype: `manuel.testing.TestSuite`
-
     """
     m = manuel.doctest.Manuel(optionflags=flags, checker=CHECKER)
     m += manuel.codeblock.Manuel()
@@ -106,6 +105,6 @@ def test_suite():
         try:
             doctests.append(DocFileSuite(os.path.join(path, filename)))
         except IOError:
-            print 'test_doctest.py skipping %s' % filename
+            print 'test_doctest.py skipping {0}'.format(filename)
 
     return unittest.TestSuite(doctests)

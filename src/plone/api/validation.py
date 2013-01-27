@@ -16,9 +16,10 @@ def _get_arg_spec(func, validator_args):
     extra_args = set(validator_args) - set(signature_args)
     if extra_args:
         raise ValueError(
-            "Validator for %s refers to parameters "
-            "that are not part of the function signature: %s" % (
-            func.__name__, ", ".join(extra_args),))
+            "Validator for {0} refers to parameters "
+            "that are not part of the function signature: {1}".format(
+                func.__name__, ", ".join(extra_args))
+        )
 
     return signature_args
 
@@ -61,7 +62,9 @@ def required_parameters(*required_params):
             missing = [p for p in required_params if p not in supplied_args]
             if len(missing):
                 raise MissingParameterError(
-                    "Missing required parameter(s): %s" % ", ".join(missing))
+                    "Missing required parameter(s): {0}".format(
+                        ", ".join(missing))
+                )
 
             return f(*args, **kwargs)
 
@@ -80,18 +83,18 @@ def mutually_exclusive_parameters(*exclusive_params):
         pass
     """
     def _mutually_exclusive_parameters(func):
-        """The actual decorator"""
+        """The actual decorator."""
         signature_params = _get_arg_spec(func, exclusive_params)
 
         def wrapped(f, *args, **kwargs):
-            """The wrapped function (whose docstring will get replaced)"""
-
+            """The wrapped function (whose docstring will get replaced)."""
             supplied_args = _get_supplied_args(signature_params, args, kwargs)
             clashes = [s for s in supplied_args if s in exclusive_params]
             if len(clashes) > 1:
                 raise InvalidParameterError(
-                    "These parameters are mutually exclusive: %s." %
-                    ", ".join(supplied_args))
+                    "These parameters are mutually exclusive: {0}.".format(
+                        ", ".join(supplied_args))
+                )
 
             return f(*args, **kwargs)
 
@@ -125,8 +128,40 @@ def required_parameter_type(parameter_name="", parameter_type=None):
                     "type {2}.".format(
                         parameter_name, type(param_value), parameter_type)
                 )
+
             return f(*args, **kwargs)
 
         return decorator(wrapped, func)
 
     return _parameter_of_type
+
+
+def at_least_one_of(*candidate_params):
+    """A decorator that raises an exception if none of the
+    specified parameters has been supplied.  Can be used in conjunction with
+    mutually_exclusive_parameters to enforce exactly one.
+
+    Usage:
+    @at_least_one_of('a', 'b')
+    def foo(a=None, b=None, c=None):
+        pass
+    """
+    def _at_least_one_of(func):
+        """The actual decorator."""
+        signature_params = _get_arg_spec(func, candidate_params)
+
+        def wrapped(f, *args, **kwargs):
+            """The wrapped function (whose docstring will get replaced)."""
+            supplied_args = _get_supplied_args(signature_params, args, kwargs)
+            candidates = [s for s in supplied_args if s in candidate_params]
+            if len(candidates) < 1:
+                raise MissingParameterError(
+                    "At least one of these parameters must be "
+                    "supplied: {0}.".format(", ".join(candidate_params))
+                )
+
+            return f(*args, **kwargs)
+
+        return decorator(wrapped, func)
+
+    return _at_least_one_of
