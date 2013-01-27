@@ -2,7 +2,6 @@
 """Tests for plone.api.validation."""
 
 from plone.api.tests.base import INTEGRATION_TESTING
-from plone.api.validation import _get_supplied_args as _gsa
 from plone.api.validation import mutually_exclusive_parameters
 from plone.api.validation import required_parameters
 from plone.api.validation import required_parameter_type
@@ -51,34 +50,6 @@ class TestPloneAPIValidation(unittest.TestCase):
             ValueError,
             mutually_exclusive_parameters('arg1', 'wibble', 'wobble'),
             undecorated_func)
-
-    def test_get_supplied_args(self):
-        """Test that positional and keyword args are recognised correctly"""
-        # the arguments specified in the function signature
-        signature = ('arg1', 'arg2', 'arg3')
-
-        # test that positional args are recognised correctly
-        result = _gsa(signature, ('foo', 'wibble'), {})
-        self.assertEquals(set(result), set(('arg1', 'arg2')))
-
-        # test that keyword args are recognised correctly
-        result = _gsa(
-            signature, (), {'arg1': 'foo', 'arg2': 'wibble'})
-        self.assertEquals(set(result), set(('arg1', 'arg2')))
-
-        # test that a mixture of args are recognised correctly
-        result = _gsa(signature, ('foo',), {'arg2': 'wibble'})
-        self.assertEquals(set(result), set(('arg1', 'arg2')))
-
-        # test that None-valued positional args are ignored
-        result = _gsa(
-            signature, ('foo', None), {})
-        self.assertEquals(set(result), set(('arg1',)))
-
-        # test that None-valued keyword args are ignored
-        result = _gsa(
-            signature, (), {'arg1': None, 'arg2': 'wibble'})
-        self.assertEquals(set(result), set(('arg2',)))
 
     def test_single_keyword_arg_provided(self):
         """Test for passing a single required parameter
@@ -176,10 +147,11 @@ class TestPloneAPIValidation(unittest.TestCase):
         parameter does not match the type specified by the
         required_parameter_type decorator.
         """
-        @required_parameter_type(parameter_name="title", parameter_type=unicode)
-        def _set_title(title=""):
+        @required_parameter_type(
+            parameter_name="title", parameter_type=unicode)
+        def _get_title(title=None):
             pass
-        
+
         from plone.api.exc import InvalidParameterError
         with self.assertRaises(InvalidParameterError):
-            _set_title(title="some_str")
+            _get_title(title="some_str")

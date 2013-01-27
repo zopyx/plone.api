@@ -27,17 +27,14 @@ def _get_supplied_args(signature_params, args, kwargs):
     """Return names of all args that have been passed in
     either as positional or keyword arguments, and are not None
     """
-    supplied_args = []
+    supplied_args = {}
     for i in range(len(args)):
         if args[i] is not None:
-            supplied_args.append(signature_params[i])
+            supplied_args[signature_params[i]] = args[i]
 
-    if kwargs:
-        print "There are kwargs here!", kwargs
-        
-    for k in kwargs:
-        if kwargs[k] is not None:
-            supplied_args.append(k)
+    for k, v in kwargs.iteritems():
+        if v is not None:
+            supplied_args[k] = v
 
     return supplied_args
 
@@ -114,10 +111,14 @@ def required_parameter_type(parameter_name="", parameter_type=None):
     """
     def _parameter_of_type(func):
         """The actual decorator"""
+        signature_params = _get_arg_spec(func, ())
+
         def wrapped(f, *args, **kwargs):
             """The wrapped function (whose docstring will get replaced)"""
-            import pdb; pdb.set_trace()
-            param_value = kwargs.get(parameter_name, None)
+
+            supplied_args = _get_supplied_args(signature_params, args, kwargs)
+            param_value = supplied_args.get(parameter_name, None)
+
             if param_value and not isinstance(param_value, parameter_type):
                 raise InvalidParameterError(
                     "The '{0}' parameter is of type {1} but should be of "
