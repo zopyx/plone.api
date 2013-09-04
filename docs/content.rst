@@ -98,7 +98,7 @@ stucture above, including using :meth:`api.content.get`.
 
     # moreover, you can access content by its UID
     uid = about['team'].UID()
-    conference = api.content.get(UID=uid)
+    team = api.content.get(UID=uid)
 
 
 .. invisible-code-block: python
