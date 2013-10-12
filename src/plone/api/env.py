@@ -177,7 +177,7 @@ def add_ons(name=None, installed=False, installable=False, upgradable=False):
         return [(pr['id'], qi.getProductVersion(pr['id']))
                 for pr in qi.listInstalledProducts(showHidden=True)
                 if qi.upgradeInfo(pr['id'])['required']]
-    else:
+    else: # list all
         return [(pr['id'], qi.getProductVersion(pr['id']))
                 for pr in qi.listInstallableProducts(skipInstalled=False)]
 
