@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 from AccessControl.SecurityManagement import getSecurityManager
-from AccessControl.SecurityManagement import setSecurityManager
 from AccessControl.SecurityManagement import newSecurityManager
+from AccessControl.SecurityManagement import setSecurityManager
 from contextlib import contextmanager
+from pkg_resources import get_distribution
 from plone.api import portal
 from plone.api.exc import InvalidParameterError
 from plone.api.exc import UserNotFoundError
-from plone.api.validation import required_parameters
 from plone.api.validation import at_least_one_of
 from plone.api.validation import mutually_exclusive_parameters
+from plone.api.validation import required_parameters
 from zope.globalrequest import getRequest
 
 import Globals
@@ -161,6 +162,37 @@ class _GlobalRoleOverridingContext(object):
     def getWrappedOwner(self):
         return None
 
+def add_ons(name=None, installed=False, installable=False, upgradable=False):
+    p = portal.get()
+    qi = p.portal_quickinstaller
+
+    if name:
+        return qi.getProductVersion(name)
+    elif installed:
+        return [(pr['id'], qi.getProductVersion(pr['id']))
+                for pr in qi.listInstalledProducts(showHidden=True)]
+    elif installable:
+        return [(pr['id'], qi.getProductVersion(pr['id']))
+                for pr in qi.listInstallableProducts()]
+    elif upgradable:
+        return [(pr['id'], qi.getProductVersion(pr['id']))
+                for pr in qi.listInstalledProducts(showHidden=True)
+                if qi.upgradeInfo(pr['id'])['required']]
+    else:
+        return [(pr['id'], qi.getProductVersion(pr['id']))
+                for pr in qi.listInstallableProducts(skipInstalled=False)]
+
+def plone_version():
+    p = portal.get()
+    qi = p.portal_quickinstaller
+
+    return qi.getProductVersion('Plone')
+
+def zope_version():
+    p = portal.get()
+    qi = p.portal_quickinstaller
+
+    return qi.getProductVersion('Zope2')
 
 def debug_mode():
     """Returns True if your zope instance is running in debug mode.
