@@ -3,7 +3,6 @@ from AccessControl.SecurityManagement import getSecurityManager
 from AccessControl.SecurityManagement import newSecurityManager
 from AccessControl.SecurityManagement import setSecurityManager
 from contextlib import contextmanager
-from pkg_resources import get_distribution
 from plone.api import portal
 from plone.api.exc import InvalidParameterError
 from plone.api.exc import UserNotFoundError
