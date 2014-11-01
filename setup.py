@@ -28,7 +28,6 @@ setup(
     zip_safe=False,
     install_requires=[
         'setuptools',
-        'Plone',
         'decorator',
     ],
     extras_require={
