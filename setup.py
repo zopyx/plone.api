@@ -27,8 +27,21 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'setuptools',
+        'AccessControl',
+        'Acquisition',
+        'Products.Archetypes',
+        'Products.CMFCore',
+        'Products.statusmessages',
+        'Zope2',
         'decorator',
+        'plone.app.uuid',
+        'plone.registry',
+        'plone.uuid',
+        'setuptools',
+        'zope.component',
+        'zope.container',
+        'zope.globalrequest',
+        'zope.interface',
     ],
     extras_require={
         'develop': [
