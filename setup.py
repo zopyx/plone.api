@@ -35,6 +35,7 @@ setup(
         'Zope2',
         'decorator',
         'plone.app.uuid',
+        'plone.app.layout',
         'plone.registry',
         'plone.uuid',
         'setuptools',
