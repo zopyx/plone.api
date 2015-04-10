@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """Module that provides functionality for content manipulation."""
 
-from Products.Archetypes.interfaces.base import IBaseObject
 from Products.CMFCore.interfaces import ISiteRoot
 from Products.CMFCore.WorkflowCore import WorkflowException
 from copy import copy as _copy
+from plone.app.contentlisting.interfaces import IContentListing
 from plone.api import portal
 from plone.api.exc import InvalidParameterError
 from plone.api.validation import at_least_one_of
@@ -18,8 +18,17 @@ from zope.container.interfaces import INameChooser
 from zope.interface import Interface
 from zope.interface import providedBy
 
+import pkg_resources
 import random
 import transaction
+
+try:
+    pkg_resources.get_distribution('Products.Archetypes')
+except pkg_resources.DistributionNotFound:
+    class IBaseObject(Interface):
+        """Fake Products.Archetypes.interfaces.base.IBaseObject"""
+else:
+    from Products.Archetypes.interfaces.base import IBaseObject
 
 
 @required_parameters('container', 'type')
@@ -202,16 +211,14 @@ def rename(obj=None, new_id=None, safe_id=False):
     :Example: :ref:`content_rename_example`
     """
     obj_id = obj.getId()
+    container = obj.aq_parent
 
     if safe_id:
-        try:
-            chooser = INameChooser(obj)
-        except TypeError:
-            chooser = INameChooser(obj.aq_parent)
+        chooser = INameChooser(container)
         new_id = chooser.chooseName(new_id, obj)
 
-    obj.aq_parent.manage_renameObject(obj_id, new_id)
-    return obj.aq_parent[new_id]
+    container.manage_renameObject(obj_id, new_id)
+    return container[new_id]
 
 
 @required_parameters('source')
@@ -230,7 +237,7 @@ def copy(source=None, target=None, id=None, safe_id=False):
         - however, if the new object's id conflicts with another object in the
         target container, a suffix will be added to the new object's id.
     :type id: string
-    :param safe_id: When True, the given id will be enforced. If the id is
+    :param safe_id: When False, the given id will be enforced. If the id is
         conflicting with another object in the target container, raise a
         InvalidParameterError. When True, choose a new, non-conflicting id.
     :type safe_id: boolean
@@ -245,25 +252,35 @@ def copy(source=None, target=None, id=None, safe_id=False):
     if target is None:
         target = source.aq_parent
 
-    target.manage_pasteObjects(source.aq_parent.manage_copyObjects(source_id))
+    copy_info = target.manage_pasteObjects(
+        source.aq_parent.manage_copyObjects(source_id)
+    )
 
+    new_id = copy_info[0]['new_id']
     if id:
-        return rename(obj=target[source_id], new_id=id, safe_id=safe_id)
+        return rename(obj=target[new_id], new_id=id, safe_id=safe_id)
     else:
-        return target[source_id]
+        return target[new_id]
 
 
-@required_parameters('obj')
-def delete(obj=None):
-    """Delete the object.
+@at_least_one_of('obj', 'objects')
+def delete(obj=None, objects=None):
+    """Delete the object(s).
 
-    :param obj: [required] Object that we want to delete.
+    :param obj: Object that we want to delete.
     :type obj: Content object
+    :param objects: Objects that we want to delete.
+    :type objects: List of content objects
     :raises:
         ValueError
     :Example: :ref:`content_delete_example`
     """
-    obj.aq_parent.manage_delObjects([obj.getId()])
+    if obj is not None:
+        obj.aq_parent.manage_delObjects([obj.getId()])
+    else:
+        # The objects may have different parents
+        for obj in objects:
+            delete(obj=obj)
 
 
 @required_parameters('obj')
@@ -457,3 +474,92 @@ def get_uuid(obj=None):
     :Example: :ref:`content_get_uuid_example`
     """
     return IUUID(obj)
+
+
+def find(context=None, depth=None, **kwargs):
+    """Find content in the portal.
+
+    :param context: Context for the search
+    :type obj: Content object
+    :param depth: How far in the content tree we want to search from context
+    :type obj: Content object
+    :returns: ContentListing objects
+    :rtype: ContentListing
+    :Example: :ref:`content_find_example`
+
+    Find works alike catalog(). Indexes are passing in as arguments with the
+    search query as the values.
+
+    Specify indexes as arguments:
+    >>> find(portal_type='Document')
+
+    or combinations of indexes.
+    >>> find(portal_type='Document', SearchableText='Team')
+
+
+    Differences to using the catalog directly are:
+
+    The context argument allows passing in an context object, instead
+    of path='/'.join(context.getPhysicalPath().
+
+    >>> find(context=context)
+    - or -
+    >>> find(context=context, portal_type='Document')
+
+    Specifing the search depth is supported using the `depth` argument.
+    >>> find(depth=1)
+
+    Using `depth` needs a context for it's path. If no context is passed, the
+    portal root is used.
+    >>> find(context=portal, depth=1, portal_type='Document')
+    - or -
+    >>> find(depth=1, portal_type='Document')
+
+    The path can be queried directly, too:
+    >>> find(path={'query': '/plone/about/team', 'depth': 1})
+
+    The `object_provides` index/argument allows Interface objects as well as
+    identifiers.
+    >>> find(object_provides=IATDocument)
+    - or -
+    >>> find(object_provides=IATDocument.__identifier__)
+
+    An empty resultset is returned if no valid indexes are queried.
+    >>> len(find())
+    >>> 0
+    """
+    query = {}
+    query.update(**kwargs)
+
+    # Passing a context or depth overrides the existing path query
+    if context or depth:
+        query['path'] = {}
+
+    # Limit search depth
+    if depth is not None:
+        # If we don't have a context, we'll assume the portal root.
+        if context is None:
+            context = portal.get()
+        query['path']['depth'] = depth
+
+    if context is not None:
+        query['path']['query'] = '/'.join(context.getPhysicalPath())
+
+    # Convert interfaces to their identifiers
+    object_provides = query.get('object_provides', [])
+    if object_provides:
+        if not isinstance(object_provides, list):
+            object_provides = [object_provides]
+        for k, v in enumerate(object_provides):
+            if not isinstance(v, basestring):
+                object_provides[k] = v.__identifier__
+        query['object_provides'] = object_provides
+
+    # Make sure we don't dump the whole catalog.
+    catalog = portal.get_tool('portal_catalog')
+    indexes = catalog.indexes()
+    valid_indexes = [index for index in query if index in indexes]
+    if not valid_indexes:
+        return IContentListing([])
+
+    return IContentListing(catalog(**query))

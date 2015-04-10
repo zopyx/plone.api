@@ -1,8 +1,6 @@
 .. admonition:: GitHub-only
 
-    WARNING: If you are reading this on GitHub, DON'T! Read the documentation
-    at `api.plone.org <http://api.plone.org/portal.html>`_
-    so you have working references and proper formatting.
+    WARNING: If you are reading this on GitHub, DON'T! Read the documentation at `api.plone.org <http://api.plone.org/portal.html>`_ so you have working references and proper formatting.
 
 
 .. module:: plone
@@ -11,6 +9,9 @@
 
 Portal
 ======
+
+.. contents:: :local:
+
 
 .. _portal_get_example:
 
@@ -35,9 +36,8 @@ Getting the Plone portal object is easy with :meth:`api.portal.get`.
 Get navigation root
 -------------------
 
-In multi-lingual Plone installations you probably want to get the
-language-specific navigation root object, not the top portal object. You do this with
-:meth:`api.portal.get_navigation_root()`.
+In multi-lingual or multi-site Plone installations you probably want to get the language-specific navigation root object, not the top portal object.
+You do this with :meth:`api.portal.get_navigation_root()`.
 
 Assuming there is a document ``english_page`` in a folder ``en``, which is the navigation root:
 
@@ -91,8 +91,7 @@ Since we now have the portal object, it's easy to get the portal url.
 Get tool
 --------
 
-To get a portal tool in a simple way, just use :meth:`api.portal.get_tool` and
-pass in the name of the tool you need.
+To get a portal tool in a simple way, just use :meth:`api.portal.get_tool` and pass in the name of the tool you need.
 
 .. code-block:: python
 
@@ -109,8 +108,7 @@ pass in the name of the tool you need.
 Get localized time
 ------------------
 
-To display the date/time in a user-friendly way, localized to the user's
-prefered language, use :meth:`api.portal.get_localized_time`.
+To display the date/time in a user-friendly way, localized to the user's prefered language, use :meth:`api.portal.get_localized_time`.
 
 .. code-block:: python
 
@@ -181,8 +179,7 @@ To send an e-mail use :meth:`api.portal.send_email`:
 Show notification message
 -------------------------
 
-With :meth:`api.portal.show_message` you can show a notification message to
-the user.
+With :meth:`api.portal.show_message` you can show a notification message to the user.
 
 .. code-block:: python
 
@@ -203,8 +200,7 @@ the user.
 Get plone.app.registry record
 -----------------------------
 
-Plone comes with a package ``plone.app.registry`` that provides a common way
-to store various configuration and settings.
+Plone comes with a package ``plone.app.registry`` that provides a common way to store various configuration and settings.
 :meth:`api.portal.get_registry_record` provides an easy way to access these.
 
 .. invisible-code-block: python
@@ -233,8 +229,7 @@ to store various configuration and settings.
 Set plone.app.registry record
 -----------------------------
 
-Plone comes with a package ``plone.app.registry`` that provides a common way
-to store various configuration and settings.
+Plone comes with a package ``plone.app.registry`` that provides a common way to store various configuration and settings.
 :meth:`api.portal.set_registry_record` provides an easy way to change these.
 
 .. invisible-code-block: python
@@ -261,5 +256,4 @@ to store various configuration and settings.
 Further reading
 ---------------
 
-For more information on possible flags and usage options please see the full
-:ref:`plone-api-portal` specification.
+For more information on possible flags and usage options please see the full :ref:`plone-api-portal` specification.

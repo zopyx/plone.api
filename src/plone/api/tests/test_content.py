@@ -3,6 +3,8 @@
 
 from Acquisition import aq_base
 from OFS.CopySupport import CopyError
+from OFS.event import ObjectWillBeMovedEvent
+from OFS.interfaces import IObjectWillBeMovedEvent
 from Products.CMFCore.interfaces import IContentish
 from Products.ZCatalog.interfaces import IZCatalog
 from plone import api
@@ -11,8 +13,12 @@ from plone.indexer import indexer
 from plone.uuid.interfaces import IMutableUUID
 from plone.uuid.interfaces import IUUIDGenerator
 from zExceptions import BadRequest
+from zope.lifecycleevent import IObjectModifiedEvent
+from zope.lifecycleevent import IObjectMovedEvent
+from zope.lifecycleevent import ObjectMovedEvent
 from zope.component import getUtility
 from zope.component import getGlobalSiteManager
+from zope.container.contained import ContainerModifiedEvent
 
 import mock
 import pkg_resources
@@ -24,6 +30,13 @@ except pkg_resources.DistributionNotFound:
     HAS_DEXTERITY = False
 else:
     HAS_DEXTERITY = True
+
+try:
+    pkg_resources.get_distribution('Products.Archetypes')
+except pkg_resources.DistributionNotFound:
+    HAS_ARCHETYPES = False
+else:
+    HAS_ARCHETYPES = True
 
 
 class TestPloneApiContent(unittest.TestCase):
@@ -177,6 +190,10 @@ class TestPloneApiContent(unittest.TestCase):
                 id='test-item',
             )
 
+    @unittest.skipUnless(
+        HAS_ARCHETYPES,
+        "Only run when Archetypes is available.",
+    )
     def test_create_archetypes(self):
         """Test creating content based on Archetypes."""
 
@@ -390,12 +407,30 @@ class TestPloneApiContent(unittest.TestCase):
         """Test renaming of content."""
 
         container = self.portal
+        sm = getGlobalSiteManager()
+        firedEvents = []
+
+        def recordEvent(event):
+            firedEvents.append(event.__class__)
+
+        sm.registerHandler(recordEvent, (IObjectWillBeMovedEvent,))
+        sm.registerHandler(recordEvent, (IObjectMovedEvent,))
+        sm.registerHandler(recordEvent, (IObjectModifiedEvent,))
 
         # Rename contact
         nucontact = api.content.rename(obj=self.contact, new_id='nu-contact')
         assert (container['about']['nu-contact'] and
                 container['about']['nu-contact'] == nucontact)
         assert 'contact' not in container['about'].keys()
+
+        self.assertItemsEqual(firedEvents, [
+            ObjectMovedEvent,
+            ObjectWillBeMovedEvent,
+            ContainerModifiedEvent
+        ])
+        sm.unregisterHandler(recordEvent, (IObjectWillBeMovedEvent,))
+        sm.unregisterHandler(recordEvent, (IObjectMovedEvent,))
+        sm.unregisterHandler(recordEvent, (IObjectModifiedEvent,))
 
         # Test with safe_id option when moving content
         api.content.create(
@@ -426,6 +461,24 @@ class TestPloneApiContent(unittest.TestCase):
         assert (container['about']['link-to-blog-1-1'] and
                 container['about']['link-to-blog-1-1'] == linktoblog11)
         assert 'link-to-blog' not in container.keys()
+
+    def test_rename_same_folder(self):
+        # When renaming a folderish item with safe_id=True, and there is
+        # already an existing folderish item with that id, it should choose
+        # a new name.
+
+        events = self.portal['events']
+        about = self.portal['about']
+        api.content.rename(
+            obj=events,
+            new_id='about',
+            safe_id=True
+        )
+
+        assert self.portal['about']
+        assert self.portal['about-1']
+        assert self.portal['about'].aq_base is about.aq_base
+        assert self.portal['about-1'].aq_base is events.aq_base
 
     def test_copy_constraints(self):
         """Test the constraints for moving content."""
@@ -483,6 +536,41 @@ class TestPloneApiContent(unittest.TestCase):
         assert (container['events']['about'] and
                 container['events']['about'] == about)
 
+        # When copying with safe_id=True, the prior created item should not be
+        # renamed, and the copied item should have a sane postfix
+
+        # Create a products folder
+        products = api.content.create(
+            type='Folder', id='products', container=self.portal)
+
+        # Create a item inside the products folder
+        item = api.content.create(
+            container=products, type='Document', id='item')
+
+        api.content.copy(source=item, id='item', safe_id=True)
+
+        assert container['products']['item-1']
+        assert container['products']['item']
+
+        # When copying with safe_id=True, the created bargain with the id=item
+        # should not be renamed, and the item copied from the products folder
+        # should have a sane postfix.
+        # The item in the the products folder should still exist.
+
+        # Create a second folder named bargains
+        bargains = api.content.create(
+            type='Folder', id='bargains', container=self.portal)
+
+        # Create a bargain inside the bargains folder with the id="item"
+        bargain = api.content.create(
+            container=bargains, type='Document', id='item')
+        api.content.copy(source=item, target=bargains, id='item', safe_id=True)
+
+        assert container['bargains']['item-1']
+        assert container['bargains']['item']
+        assert container['bargains']['item'].aq_base is bargain.aq_base
+        assert container['products']['item']
+
     def test_delete_constraints(self):
         """Test the constraints for deleting content."""
 
@@ -504,6 +592,96 @@ class TestPloneApiContent(unittest.TestCase):
         # Delete the contact page
         api.content.delete(self.contact)
         assert 'contact' not in container['about'].keys()
+
+    def test_delete_multiple(self):
+        """Test deleting multiple content items."""
+
+        container = self.portal
+        api.content.copy(source=container['about'], target=container)
+        api.content.copy(source=container['about'], target=container['events'])
+
+        api.content.delete(objects=[container['copy_of_about'],
+                                    container['events']['about']])
+        assert 'copy_of_about' not in container
+        assert 'about' not in container['events']
+
+    def test_find(self):
+        """Test the finding of content in various ways."""
+
+        # Find documents
+        documents = api.content.find(portal_type='Document')
+        self.assertEqual(len(documents), 2)
+
+    def test_find_empty_query(self):
+        """Make sure an empty query yields no results"""
+
+        documents = api.content.find()
+        self.assertEqual(len(documents), 0)
+
+    def test_find_invalid_indexes(self):
+        """Make sure invalid indexes yield no results"""
+
+        # All invalid indexes yields no results
+        documents = api.content.find(invalid_index='henk')
+        self.assertEqual(len(documents), 0)
+
+        # But at least one valid index does.
+        documents = api.content.find(
+            invalid_index='henk', portal_type='Document')
+        self.assertEqual(len(documents), 2)
+
+    def test_find_context(self):
+        # Find documents in context
+        documents = api.content.find(
+            context=self.portal.about, portal_type='Document')
+        self.assertEqual(len(documents), 2)
+        documents = api.content.find(
+            context=self.portal.events, portal_type='Document')
+        self.assertEqual(len(documents), 0)
+
+    def test_find_depth(self):
+        # Limit search depth from portal root
+        documents = api.content.find(depth=2, portal_type='Document')
+        self.assertEqual(len(documents), 2)
+        documents = api.content.find(depth=1, portal_type='Document')
+        self.assertEqual(len(documents), 0)
+
+        # Limit search depth with explicit context
+        documents = api.content.find(
+            context=self.portal.about, depth=1, portal_type='Document')
+        self.assertEqual(len(documents), 2)
+        documents = api.content.find(
+            context=self.portal.about, depth=0, portal_type='Document')
+        self.assertEqual(len(documents), 0)
+
+    def test_find_interface(self):
+        # Find documents by interface or it's identifier
+        from Products.ATContentTypes.interfaces.document import IATDocument
+
+        identifier = IATDocument.__identifier__
+        documents = api.content.find(object_provides=identifier)
+        self.assertEqual(len(documents), 2)
+
+        documents = api.content.find(object_provides=IATDocument)
+        self.assertEqual(len(documents), 2)
+
+    def test_find_dict(self):
+        # Pass arguments using dict
+        path = '/'.join(self.portal.about.getPhysicalPath())
+
+        query = {
+            'portal_type': 'Document',
+            'path': {'query': path, 'depth': 2}
+            }
+        documents = api.content.find(**query)
+        self.assertEqual(len(documents), 2)
+
+        query = {
+            'portal_type': 'Document',
+            'path': {'query': path, 'depth': 0}
+            }
+        documents = api.content.find(**query)
+        self.assertEqual(len(documents), 0)
 
     def test_get_state(self):
         """Test retrieving the workflow state of a content item."""

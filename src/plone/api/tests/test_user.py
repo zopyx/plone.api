@@ -457,6 +457,44 @@ class TestPloneApiUser(unittest.TestCase):
                                  user=user,
                                  obj=folder).get(k, None))
 
+    def test_has_permission_context(self):
+        """Test has_permission on some context."""
+
+        username = 'billy'
+        user = api.user.create(
+            username=username,
+            email='billy@bob.net',
+            password='secret',
+        )
+
+        # Cannot supply both username and user arguments
+        from plone.api.exc import InvalidParameterError
+        with self.assertRaises(InvalidParameterError):
+            api.user.has_permission(
+                'View',
+                username=username,
+                user=user,
+            )
+
+        folder = api.content.create(
+            container=self.portal,
+            type='Folder',
+            id='folder_one',
+            title='A Folder',
+        )
+        api.content.transition(obj=folder, transition='publish')
+
+        self.assertTrue(api.user.has_permission(
+            'View',
+            user=user,
+            obj=folder)
+        )
+        self.assertFalse(api.user.has_permission(
+            'Modify portal content',
+            user=user,
+            obj=folder)
+        )
+
     def test_grant_roles(self):
         """Test granting a couple of roles."""
 
@@ -548,6 +586,12 @@ class TestPloneApiUser(unittest.TestCase):
         ROLES = set(('Authenticated', 'Member'))
         self.assertEqual(ROLES, set(api.user.get_roles(username='chuck')))
         self.assertEqual(ROLES, set(api.user.get_roles(user=user)))
+        self.assertEqual(
+            ROLES,
+            set(api.user.get_roles(username='chuck', inherit=False)))
+        self.assertEqual(
+            ROLES,
+            set(api.user.get_roles(user=user, inherit=False)))
 
     def test_revoke_roles_username_and_user(self):
         """Test revoke roles passing username and user."""
@@ -763,3 +807,16 @@ class TestPloneApiUser(unittest.TestCase):
             ROLES, set(api.user.get_roles(username='chuck', obj=document)))
         self.assertEqual(
             ROLES, set(api.user.get_roles(user=user, obj=document)))
+        self.assertEqual(
+            (),
+            api.user.get_roles(username='chuck', obj=folder, inherit=False),
+        )
+        self.assertEqual(
+            (),
+            api.user.get_roles(user=user, obj=folder, inherit=False))
+        self.assertEqual(
+            (),
+            api.user.get_roles(username='chuck', obj=document, inherit=False))
+        self.assertEqual(
+            (),
+            api.user.get_roles(user=user, obj=document, inherit=False))

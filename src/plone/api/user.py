@@ -275,14 +275,52 @@ def get_permissions(username=None, user=None, obj=None):
     else:
         context = env.adopt_user(username, user)
 
+    result = {}
     with context:
-        adopted_user = get_current()
+        portal_membership = portal.get_tool('portal_membership')
         permissions = (p[0] for p in getPermissions())
-        d = {}
         for permission in permissions:
-            d[permission] = bool(adopted_user.checkPermission(permission, obj))
+            result[permission] = bool(
+                portal_membership.checkPermission(permission, obj)
+            )
 
-    return d
+    return result
+
+
+@mutually_exclusive_parameters('username', 'user')
+def has_permission(permission, username=None, user=None, obj=None):
+    """Check whether this user has the given permssion.
+
+    Arguments ``username`` and ``user`` are mutually exclusive. You
+    can either set one or the other, but not both. if ``username`` and
+    ``user`` are not given, the authenticated member will be used.
+
+    :param permission: The permission you wish to check
+    :type permission: string
+    :param username: Username of the user for which you want to check
+        the permission.
+    :type username: string
+    :param user: User object for which you want to check the permission.
+    :type user: MemberData object
+    :param obj: If obj is set then check the permission on this context.
+        If obj is not given, the site root will be used.
+    :type obj: content object
+    :raises:
+        InvalidParameterError
+    :returns: True if the user has the permission, False otherwise.
+    :rtype: bool
+    """
+    if obj is None:
+        obj = portal.get()
+
+    if username is None and user is None:
+        context = _nop_context_manager()
+    else:
+        context = env.adopt_user(username, user)
+
+    with context:
+        portal_membership = portal.get_tool('portal_membership')
+        return bool(portal_membership.checkPermission(permission, obj))
 
 
 @required_parameters('roles')
@@ -362,8 +400,11 @@ def revoke_roles(username=None, user=None, obj=None, roles=None):
 
     if 'Anonymous' in roles or 'Authenticated' in roles:
         raise InvalidParameterError
-
-    actual_roles = get_roles(user=user, obj=obj)
+    inherit = True
+    if obj is not None:
+        # if obj, get only a list of local roles, without inherited ones
+        inherit = False
+    actual_roles = get_roles(user=user, obj=obj, inherit=inherit)
     if actual_roles.count('Anonymous'):
         actual_roles.remove('Anonymous')
     if actual_roles.count('Authenticated'):
@@ -373,5 +414,7 @@ def revoke_roles(username=None, user=None, obj=None, roles=None):
 
     if obj is None:
         user.setSecurityProfile(roles=roles)
+    elif not roles:
+        obj.manage_delLocalRoles([user.getId()])
     else:
         obj.manage_setLocalRoles(user.getId(), roles)

@@ -1,4 +1,6 @@
-from setuptools import setup, find_packages
+# -*- coding: utf-8 -*-
+from setuptools import find_packages
+from setuptools import setup
 
 import os
 
@@ -7,11 +9,11 @@ def read(*rnames):
     return open(os.path.join(os.path.dirname(__file__), *rnames)).read()
 
 long_description = \
-    read('docs','README.rst') + \
-    read('docs','CHANGES.rst') + \
+    read('README.rst') + \
+    read('docs', 'CHANGES.rst') + \
     read('docs', 'LICENSE.txt')
 
-version = '1.2.2dev'
+version = '1.3.3.dev0'
 
 setup(
     name='plone.api',
@@ -29,16 +31,17 @@ setup(
     install_requires=[
         'AccessControl',
         'Acquisition',
-        'Products.Archetypes',
         'Products.CMFCore',
         'Products.statusmessages',
-        'Zope2',
+        'Zope2',  # Globals, OFS(tests),
         'decorator',
-        'plone.app.uuid',
+        'plone.app.contentlisting',
         'plone.app.layout',
+        'plone.app.uuid',
         'plone.registry',
         'plone.uuid',
         'setuptools',
+        'transaction',
         'zope.component',
         'zope.container',
         'zope.globalrequest',
@@ -46,20 +49,32 @@ setup(
     ],
     extras_require={
         'develop': [
+            'Sphinx',
             'coverage',
             'flake8',
             'jarn.mkrelease',
             'manuel',
-            'Sphinx',
             'zest.releaser',
         ],
         'test': [
+            'Products.Archetypes',
+            'Products.MailHost',
+            'Products.CMFPlone',
+            'Products.ZCatalog',
             'manuel',
             'mock',
             'plone.app.dexterity',
             'plone.app.testing',
+            'plone.indexer',
+            'plone.registry',
             'unittest2',
+            'zExceptions',
+            'zope.lifecycleevent',
+            'zope.site',
         ],
+        'archetypes': [
+            'Products.Archetypes',
+        ]
     },
     classifiers=[
         'Environment :: Web Environment',

@@ -1,18 +1,81 @@
 Changelog
 =========
 
-1.2.2dev (unreleased)
----------------------
+1.3.3 (unreleased)
+------------------
+
+- Make Products.Archetypes dependency optional. Fixes #197
+  [jaroel]
+
+- Added local TOCS to main docs pages. Fixes #90.
+  [jaroel]
+
+- Allow deleting multiple objects. Fixes #198
+  [jaroel]
+
+- Fixed `make docs`.
+  [jaroel]
+
+- Support Zope users in user.adopt_user. Fixes #171 and #157.
+  [jaroel]
+
+- explicit dependencies in setup.py, explicit zcml loading in tests.
+  [jensens]
+
+- import getToolByName from origin location
+  [jensens]
+
+- overhaul of documentation: semantic linebreaks, few links fixed, minor
+  rewording.
+  [jensens]
+
+- fix ``revoke_roles`` method: now if is't called with obj parameter,
+  it doesn't set inherited roles locally.
+  [cekk]
+
+1.3.2 (2014-11-17)
+------------------
+
+- fixes #190 - broken ``MANIFEST.in``.
+  [jensens]
+
+
+1.3.1 (2014-11-17)
+------------------
+
+- Resolves issues with ``README.rst`` symlink that prevented 1.3.0 from
+  being installed. And please never ever in future use symlinks in eggs, ok?
+  [jensens]
+
+
+1.3.0 (2014-11-17)
+------------------
+
+- Fixes #184 NameChooser on rename used the wrong way and fails on
+  safe_id=True.
+  [benniboy]
+
+- Clarified documentation for content.copy, refs #185.
+  [benniboy]
+
+- Fixes if a content is copied in the same folder or in a target folder, where
+  same source id exists, the existing source(same folder) or third object
+  (same id as source) gets renamed instead of the target.
+  [benniboy]
 
 - Use getUserById to find the user when given a User object in adopt_user.
   [tschanzt]
 
-- Made ``api.portal.get_localized_time`` also work with datetime.date
+- Made ``api.portal.get_localized_time`` also work with datetime.date.
   [nightmarebadger]
 
 - Raise better/expected errors in ``api.user.grant_roles`` and
-  ``api.user.revoke_roles``
+  ``api.user.revoke_roles``.
   [adamcheasley]
+
+- Add ``api.user.has_permission`` ref #172.
+  [adamcheasley]
+
 
 1.2.1 (2014-06-24)
 ------------------
@@ -20,6 +83,7 @@ Changelog
 - Resolve issues with CHANGES.rst symlink that prevented 1.2.0 from
   being installed in some circumstances.
   [mattss]
+
 
 1.2.0 (2014-06-24)
 ------------------
@@ -29,14 +93,14 @@ Changelog
   refs. #162
   [adamcheasley]
 
-- Add ``api.env.plone_version()`` and ``api.env.zope_version()`` refs. #126.
+- Add ``api.env.plone_version()`` and ``api.env.zope_version()``, refs #126.
   [hvelarde]
 
-- Stop UnicodeDecodeErrors being swallowed in ``api.content.create``
+- Stop UnicodeDecodeErrors being swallowed in ``api.content.create``.
   [mattss]
 
 - Catch AttributeError in ``api.content.get`` (raised if only part of the
-  traversal path exists)
+  traversal path exists).
   [mattss]
 
 
