@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
 """Boilerplate for doctest functional tests."""
 
+from plone.api.tests.base import INTEGRATION_TESTING
+from Products.CMFPlone.interfaces import IMailSchema
 from plone.app.testing import applyProfile
 from plone.app.testing import setRoles
-from plone.app.testing import PLONE_INTEGRATION_TESTING
 from plone.app.testing import TEST_USER_ID
 from plone.app.testing import TEST_USER_NAME
 from plone.app.testing import TEST_USER_PASSWORD
+from plone.registry.interfaces import IRegistry
 from plone.testing import layered
 from plone.testing.z2 import Browser
+from zope.component import getUtility
 from zope.testing import renormalizing
 
 import doctest
@@ -55,15 +58,22 @@ def setUp(self):  # pragma: no cover
     browser.handleErrors = True
     portal.error_log._ignored_exceptions = ()
 
+    registry = getUtility(IRegistry)
+    registry = getUtility(IRegistry)
+    mail_settings = registry.forInterface(IMailSchema, prefix='plone')
+    mail_settings.email_from_address = 'sender@example.org'
+    mail_settings.email_from_name = u'Portal Owner'
+
     setRoles(portal, TEST_USER_ID, ['Manager'])
 
     applyProfile(portal, 'Products.CMFPlone:plone')
+    applyProfile(portal, 'plone.api:testfixture')
 
     transaction.commit()
 
 
 def DocFileSuite(
-    testfile, flags=FLAGS, setUp=setUp, layer=PLONE_INTEGRATION_TESTING
+    testfile, flags=FLAGS, setUp=setUp, layer=INTEGRATION_TESTING
 ):
     """Returns a test suite configured with a test layer.
 

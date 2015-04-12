@@ -4,6 +4,7 @@
 from Acquisition import aq_inner
 from Products.CMFCore.interfaces import ISiteRoot
 from Products.CMFCore.utils import getToolByName
+from Products.CMFPlone.interfaces import IMailSchema
 from Products.statusmessages.interfaces import IStatusMessage
 from datetime import date
 from datetime import datetime as dtime
@@ -134,8 +135,14 @@ def send_email(sender=None, recipient=None, subject=None, body=None):
     encoding = portal.getProperty('email_charset', 'utf-8')
 
     if not sender:
-        from_address = portal.getProperty('email_from_address', '')
-        from_name = portal.getProperty('email_from_name', '')
+        registry = getUtility(IRegistry)
+        mail_settings = registry.forInterface(IMailSchema, prefix='plone')
+
+        from_address = mail_settings.email_from_address or \
+            portal.getProperty('email_from_address', '')
+        from_name = mail_settings.email_from_name or \
+            portal.getProperty('email_from_name', '')
+
         sender = formataddr((from_name, from_address))
         if parseaddr(sender)[1] != from_address:
             # formataddr probably got confused by special characters.

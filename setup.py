@@ -57,7 +57,7 @@ setup(
             'zest.releaser',
         ],
         'test': [
-            'Products.Archetypes',
+            'plone.app.contenttypes',
             'Products.MailHost',
             'Products.CMFPlone',
             'Products.ZCatalog',

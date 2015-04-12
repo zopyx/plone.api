@@ -191,7 +191,7 @@ def test_mode():
     if env.IS_TEST is None:
         env.IS_TEST = False
         for frame in traceback.extract_stack():
-            if 'zope/testing/testrunner' in frame[0]:
+            if 'testrunner' in frame[0]:
                 env.IS_TEST = True
                 break
 

@@ -90,7 +90,6 @@ def create(
                 raise InvalidParameterError(
                     "Cannot add a '%s' object to the container." % type
                 )
-
         raise InvalidParameterError(
             "Cannot add a '{0}' object to the container.\n"
             "Allowed types are:\n"

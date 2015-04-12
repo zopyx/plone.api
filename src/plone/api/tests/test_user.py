@@ -52,12 +52,12 @@ class TestPloneApiUser(unittest.TestCase):
         """Enforce user.get works with username and userid."""
         self._check_userid_and_username_different()
         self.assertEqual(
-            api.user.get(userid=TEST_USER_ID),
-            api.user.get_current(),
+            api.user.get(userid=TEST_USER_ID).id,
+            api.user.get_current().id,
         )
         self.assertEqual(
-            api.user.get(username=TEST_USER_NAME),
-            api.user.get_current(),
+            api.user.get(username=TEST_USER_NAME).id,
+            api.user.get_current().id,
         )
 
     def test_create_email_in_properties(self):

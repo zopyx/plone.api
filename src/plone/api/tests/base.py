@@ -17,8 +17,6 @@ class PloneApiLayer(PloneSandboxLayer):
 
     def setUpZope(self, app, configurationContext):
         """Prepare Zope instance by loading appropriate ZCMLs."""
-        import plone.app.dexterity
-        self.loadZCML(package=plone.app.dexterity)
         import plone.api
         self.loadZCML(package=plone.api, name="testing.zcml")
 

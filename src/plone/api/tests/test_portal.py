@@ -3,6 +3,7 @@
 
 from DateTime import DateTime
 from Products.CMFCore.utils import getToolByName
+from Products.CMFPlone.interfaces import IMailSchema
 from Products.CMFPlone.tests.utils import MockMailHost
 from Products.MailHost.interfaces import IMailHost
 from datetime import date
@@ -44,7 +45,12 @@ class TestPloneApiPortal(unittest.TestCase):
 
         self.mailhost = portal.get_tool('MailHost')
 
-        self.portal._updateProperty('email_from_name', 'Portal Owner')
+        registry = getUtility(IRegistry)
+        mail_settings = registry.forInterface(IMailSchema, prefix='plone')
+        mail_settings.email_from_address = 'sender@example.org'
+        mail_settings.email_from_name = u'Portal Owner'
+
+        self.portal._updateProperty('email_from_name', u'Portal Owner')
         self.portal._updateProperty('email_from_address', 'sender@example.org')
 
     def _set_localization_date_format(self):
@@ -128,35 +134,6 @@ class TestPloneApiPortal(unittest.TestCase):
         # A selection of portal tools which should exist in all plone versions
         should_be_theres = (
             "portal_setup",
-            "portal_actionicons",
-            "portal_actions",
-            "portal_atct",
-            "portal_calendar",
-            "portal_catalog",
-            "portal_controlpanel",
-            "portal_css",
-            "portal_diff",
-            "portal_factory",
-            "portal_groupdata",
-            "portal_groups",
-            "portal_interface",
-            "portal_javascripts",
-            "portal_memberdata",
-            "portal_membership",
-            "portal_metadata",
-            "portal_migration",
-            "portal_password_reset",
-            "portal_properties",
-            "portal_quickinstaller",
-            "portal_registration",
-            "portal_skins",
-            "portal_types",
-            "portal_uidannotation",
-            "portal_uidgenerator",
-            "portal_uidhandler",
-            "portal_undo",
-            "portal_url",
-            "portal_view_customizations",
             "portal_workflow",
         )
 
@@ -236,6 +213,11 @@ class TestPloneApiPortal(unittest.TestCase):
         send email.
         """
         self.portal._updateProperty('email_from_address', None)
+
+        registry = getUtility(IRegistry)
+        mail_settings = registry.forInterface(IMailSchema, prefix='plone')
+        mail_settings.email_from_address = ''
+
         with self.assertRaises(ValueError):
             portal.send_email(
                 recipient="bob@plone.org",

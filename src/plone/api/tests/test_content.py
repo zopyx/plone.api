@@ -6,6 +6,7 @@ from OFS.CopySupport import CopyError
 from OFS.event import ObjectWillBeMovedEvent
 from OFS.interfaces import IObjectWillBeMovedEvent
 from Products.CMFCore.interfaces import IContentish
+from Products.CMFPlone.interfaces.constrains import ISelectableConstrainTypes
 from Products.ZCatalog.interfaces import IZCatalog
 from plone import api
 from plone.api.tests.base import INTEGRATION_TESTING
@@ -140,8 +141,9 @@ class TestPloneApiContent(unittest.TestCase):
             container=container, type='Folder', id='test-folder')
         assert folder
         # Constraint the allowed types
-        folder.setConstrainTypesMode(1)
-        folder.setLocallyAllowedTypes(('News Item',))
+        behavior = ISelectableConstrainTypes(folder)
+        behavior.setConstrainTypesMode(1)
+        behavior.setLocallyAllowedTypes(('News Item',))
         with self.assertRaises(InvalidParameterError):
             api.content.create(
                 container=folder,
@@ -656,13 +658,13 @@ class TestPloneApiContent(unittest.TestCase):
 
     def test_find_interface(self):
         # Find documents by interface or it's identifier
-        from Products.ATContentTypes.interfaces.document import IATDocument
+        from plone.app.contenttypes.interfaces import IDocument
 
-        identifier = IATDocument.__identifier__
+        identifier = IDocument.__identifier__
         documents = api.content.find(object_provides=identifier)
         self.assertEqual(len(documents), 2)
 
-        documents = api.content.find(object_provides=IATDocument)
+        documents = api.content.find(object_provides=IDocument)
         self.assertEqual(len(documents), 2)
 
     def test_find_dict(self):
@@ -842,7 +844,7 @@ class TestPloneApiContent(unittest.TestCase):
         container.invokeFactory('Document', 'test-archetype')
         document = container['test-archetype']
         uuid1 = generator()
-        document._setUID(uuid1)
+        IMutableUUID(document).set(uuid1)
 
         uuid2 = api.content.get_uuid(document)
         self.assertEqual(uuid1, uuid2)
@@ -875,7 +877,6 @@ class TestPloneApiContent(unittest.TestCase):
         should_be_theres = (
             "adapter",
             "authenticator",
-            "checkDocument",
             "get_macros",
             "history",
             "plone",
